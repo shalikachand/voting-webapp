@@ -1,6 +1,14 @@
 {% extends "layout.html" %}
 {% block main %}
 
+
+{% for item in responses %}
+    <li>{{ item.email }}</li>
+{% else %}
+    <p>None</p>  <!-- check if loop is empty -->
+{% endfor %}
+
+
 <div class="row pt-5">
     <div class="col-lg-4 col-sm-12">
         <div class="card" id="login">

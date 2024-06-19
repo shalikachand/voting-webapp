@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block main %}
+
+<div class="row pt-5">
+    <div class="col-lg-4 col-sm-12">
+        <form action="/submit" method="post">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Email</span>
+                <input type="email" class="form-control" name="email" pattern="^\d{5}@burnside\.school\.nz$" required="" title="Use your school email (eg. xxxxx@burnside.school.nz)">
+            </div>
+            <div class="input-group mb-3">
+                <label class="input-group-text" for="division-select">Division</label>
+                <select class="form-select" id="division-select" name="division" required="">
+                    <option value="North">North</option>
+                    <option value="South">South</option>
+                    <option value="West">West</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Next</button>
+        </form>
+    </div>
+    <div class="col-lg-8 col-sm-12"></div>
+</div>
+
+{% endblock %}

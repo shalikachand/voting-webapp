@@ -1,0 +1,50 @@
+{% extends "layout.html" %}
+{% block main %}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Teacher Dashboard</h1>
+    <div class="row">
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-user-edit fa-3x mb-3"></i>
+                    <h5 class="card-title">Edit Nominees</h5>
+                    <p class="card-text">Modify nominees in the current form.</p>
+                    <a href="/edit-nominees" class="btn btn-primary">Edit Nominees</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-chart-bar fa-3x mb-3"></i>
+                    <h5 class="card-title">See Results</h5>
+                    <p class="card-text">View the results of the current voting.</p>
+                    <a href="/see-results" class="btn btn-success">See Results</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-key fa-3x mb-3"></i>
+                    <h5 class="card-title">Change Password</h5>
+                    <p class="card-text">Update your account password.</p>
+                    <a href="/change-password" class="btn btn-warning">Change Password</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <i class="fas fa-plus fa-3x mb-3"></i>
+                    <h5 class="card-title">Create New Form</h5>
+                    <p class="card-text">Start a new form for collecting votes.</p>
+                    <a href="/create-form" class="btn btn-info">Create Form</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

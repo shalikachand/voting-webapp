@@ -1,0 +1,89 @@
+{% extends "layout.html" %}
+{% block main %}
+
+<div class="container mt-5">
+    <h1 class="mb-4">Edit Nominees</h1>
+    <div class="row">
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="card-title">Year 9</h2>
+                    <div id="year9-nominees" class="nominees-list">
+                        <!-- Existing nominees will be dynamically added here -->
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" onclick="openAddNomineeModal('year9')">
+                        <i class="fas fa-plus"></i> Add Nominee
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="card-title">Year 10</h2>
+                    <div id="year10-nominees" class="nominees-list">
+                        <!-- Existing nominees will be dynamically added here -->
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" onclick="openAddNomineeModal('year10')">
+                        <i class="fas fa-plus"></i> Add Nominee
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="card-title">Year 11</h2>
+                    <div id="year11-nominees" class="nominees-list">
+                        <!-- Existing nominees will be dynamically added here -->
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" onclick="openAddNomineeModal('year11')">
+                        <i class="fas fa-plus"></i> Add Nominee
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-sm-6 mb-4">
+            <div class="card text-center">
+                <div class="card-body">
+                    <h2 class="card-title">Year 12</h2>
+                    <div id="year12-nominees" class="nominees-list">
+                        <!-- Existing nominees will be dynamically added here -->
+                    </div>
+                    <button class="btn btn-primary w-100 mt-2" onclick="openAddNomineeModal('year12')">
+                        <i class="fas fa-plus"></i> Add Nominee
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="btn btn-success mt-4" onclick="finishEditing()">Finished</button>
+</div>
+
+<!-- Modal for adding nominees -->
+<div class="modal fade" id="addNomineeModal" tabindex="-1" aria-labelledby="addNomineeModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addNomineeModalLabel">Add Nominee</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addNomineeForm">
+                    <div class="mb-3">
+                        <label for="nomineeName" class="form-label">Nominee Name</label>
+                        <input type="text" class="form-control" id="nomineeName" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="nomineeImage" class="form-label">Nominee Image</label>
+                        <input type="file" class="form-control" id="nomineeImage" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Add Nominee</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
