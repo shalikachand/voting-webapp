@@ -5,7 +5,7 @@ class Admin(db.Model):
     __tablename__ = 'Admin'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String, nullable=False)
-    password = db.Column(db.String, nullable=False)
+    password_hash = db.Column(db.String, nullable=False)
 
 
 class NomineeBridge(db.Model):

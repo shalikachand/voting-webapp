@@ -1,119 +1,23 @@
 {% extends "layout.html" %}
 {% block main %}
-
-<div class="row pt-5">
-    <div class="col-lg-8 col-sm-12">
-        <div class="card mb-4">
-            <div class="card-body">
-                <p class="card-text">Please select who you wish to nominate below. You can only choose one nominee per year level.</p>
+<form action="/nominees" method="post">
+    <!-- Example for Year 9 -->
+    <div class="container mb-4">
+        <h2>Year 9</h2>
+        <div class="grid">
+            {% for nominee in year9_nominees %}
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/' + nominee.photo) }}" class="card-img-top" alt="Nominee Image">
+                <div class="card-body">
+                    <h5 class="card-title">{{ nominee.first_name }} {{ nominee.last_name }}</h5>
+                    <input type="radio" name="year9" value="{{ nominee.id }}" required> Select
+                </div>
             </div>
+            {% endfor %}
         </div>
-        
-        <form action="/submit" method="post">
-            <div class="container mb-4">
-                <h2>Year 9</h2>
-                <div class="row">
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 1</h5>
-                                <input type="radio" name="year9" value="nominee1" required> Select
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 2</h5>
-                                <input type="radio" name="year9" value="nominee2" required> Select
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container mb-4">
-                <h2>Year 10</h2>
-                <div class="row">
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 1</h5>
-                                <input type="radio" name="year10" value="nominee1" required> Select
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 2</h5>
-                                <input type="radio" name="year10" value="nominee2" required> Select
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container mb-4">
-                <h2>Year 11</h2>
-                <div class="row">
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 1</h5>
-                                <input type="radio" name="year11" value="nominee1" required> Select
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 2</h5>
-                                <input type="radio" name="year11" value="nominee2" required> Select
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="container mb-4">
-                <h2>Year 12</h2>
-                <div class="row">
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 1</h5>
-                                <input type="radio" name="year12" value="nominee1" required> Select
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-3 mb-3">
-                        <div class="card">
-                            <img src="static/images/placeholder.png" class="card-img-top" alt="Nominee Image">
-                            <div class="card-body">
-                                <h5 class="card-title">Nominee 2</h5>
-                                <input type="radio" name="year12" value="nominee2" required> Select
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="mb-3 form-check">
-                <input type="checkbox" class="form-check-input" id="emailCopy" name="emailCopy">
-                <label class="form-check-label" for="emailCopy">Send me an emailed copy of my response</label>
-            </div>
-
-            <button type="submit" class="btn btn-primary">Submit</button>
-        </form>
     </div>
-</div>
+    <!-- Repeat similar blocks for other year levels -->
 
+    <button type="submit" class="btn btn-primary">Submit</button>
+</form>
 {% endblock %}

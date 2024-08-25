@@ -1,16 +1,14 @@
-<div class="container">
-    <!-- <a class="navbar-brand" href="#">BHS Student Council</a> -->
-    <!-- <img class="img-fluid" src="" alt="BHS Logo"> -->
-    <img src="static\images\logo-light.svg" alt="logo" height="50">
-
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-    <div class="collapse navbar-collapse" id="navbarNavAltMarkup" style="justify-content: flex-end;">
-        <div class="navbar-nav">
-            <a class="nav-link active" href="/">Home</a>
-            <a class="nav-link" href="/vote">Vote Here</a>
-            <a class="nav-link btn btn-primary text-light" href="#login"><i class="fa-solid fa-right-to-bracket"></i>&nbsp;&nbsp;Teacher Login</a>
-        </div>
-    </div>
+<img src="static/images/logo-light.svg" alt="logo" height="60">
+<div class="navbar-links">
+    <a href="/">Home</a>
+    <a href="/vote">Vote Here</a>
+    {% if is_logged_in() %}
+        <a href="/logout">
+            <i class="fa-solid fa-right-to-bracket fa-flip-horizontal"></i>&nbsp;&nbsp;Logout
+        </a>
+    {% else %}
+        <a href="/login">
+            <i class="fa-solid fa-right-to-bracket"></i>&nbsp;&nbsp;Login
+        </a>
+    {% endif %}
 </div>

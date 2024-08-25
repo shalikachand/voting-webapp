@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block main %}
+<div class="container mt-5">
+    {% for division in division_stats %}
+        <div>
+            <h3>{{ division.division }}</h3>
+            {% for year_level in division.year_levels %}
+                <h4>Year {{ year_level.year_level }}</h4>
+                <table>
+                    <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>First</th>
+                        <th>Last</th>
+                        <th>Votes</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for nominee in year_level.nominees %}
+                            <tr>
+                                <th scope="row">1</th>
+                                <td>{{ nominee.first }}</td>
+                                <td>{{ nominee.last }}</td>
+                                <td>{{ nominee.votes }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endfor %}
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
