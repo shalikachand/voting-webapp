@@ -1,0 +1,35 @@
+{% extends "layout.html" %}
+{% block main %}
+<h2>Select Nominees</h2>
+<form method="post" onsubmit="return submitVote();">
+    {% for year_level, nominees in nominees_by_year.items() %}
+        <h3>Year {{ year_level }}</h3>
+        <div class="grid">
+            {% for nominee in nominees %}
+            <div class="nominee-card">
+                <div class="nominee-card-body">
+                    <label for="nominee_{{ nominee.id }}">
+                        {% if nominee.photo %}
+                            <img src="data:image/jpeg;base64,{{ nominee.photo }}" alt="{{ nominee.first_name }} {{ nominee.last_name }}" class="photos">
+                        {% else %}
+                            <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="Placeholder Photo" class="photos">
+                        {% endif %}
+                    </label>
+                    <label for="nominee_{{ nominee.id }}">{{ nominee.first_name }} {{ nominee.last_name }}</label>
+                    <input type="radio" id="nominee_{{ nominee.id }}" name="nominee_{{ year_level }}" value="{{ nominee.id }}" required>
+                </div>
+            </div>
+            {% endfor %}
+        </div> <!-- Move grid container outside of the nominee loop -->
+    {% endfor %}
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+function submitVote() {
+    alert("Successfully submitted your vote!");
+    return true; 
+}
+</script>
+
+{% endblock %}

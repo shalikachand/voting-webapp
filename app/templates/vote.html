@@ -1,9 +1,16 @@
 {% extends "layout.html" %}
 {% block main %}
-<p class="alert-info">Please enter your school email and division</p>
-<form action="/submit" method="post">
+
+{% if error %}
+    <p class="alert-error">{{ error }}</p>
+{% else %}
+    <p class="alert-info">Please enter your school email and division.</p>
+{% endif %}
+
+<form action="{{ url_for('vote') }}" method="post">
     <label for="email" class="form-label">Email</label>
     <input type="email" id="email" name="email" pattern="^\d{5}@burnside\.school\.nz$" required class="form-control">
+    
     <label for="division" class="form-label">Division</label>
     <select id="division" name="division" required class="form-control">
         <option value="" selected disabled>Select your division</option>
@@ -11,6 +18,7 @@
         <option value="{{ division.id }}">{{ division.division }}</option>
         {% endfor %}
     </select>
+    
     <button>Next</button>
 </form>
 {% endblock %}

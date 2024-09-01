@@ -11,6 +11,17 @@ body {
     margin: 20px;
 }
 
+.photos {
+    width: 110px; 
+    height: 110px; 
+}
+
+.edit-photos {
+    object-fit: cover; 
+    width: 80px; 
+    height: 80px;
+}
+
 /* Navbar Styles */
 .navbar {
     background-color: #f1f1f1; /* Very light grey */
@@ -29,6 +40,11 @@ body {
     padding: 8px 16px;
 }
 
+.navbar a:hover {
+    background-color: #e0e0e0;
+    border-radius: 4px;
+}
+
 /* Navbar Logo */
 .navbar img {
     height: 60px;
@@ -40,6 +56,7 @@ body {
     color: #fff;
     padding: 20px;
     border-radius: 4px;
+    margin-bottom: 25px;
 }
 
 /* Container for Centering Grid */
@@ -96,9 +113,25 @@ body {
     border-radius: 4px;
 }
 
-/* Modal Styles */
-.modal-header, .modal-footer {
-    border: none;
+.card a:hover {
+    background-color: #699633;
+}
+
+.nominee-card {
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    padding: 20px;
+    background-color: #fff;
+    width: 100%; /* Ensure the card takes full width of its grid cell */
+    box-sizing: border-box;
+    margin-bottom: 15px;
+}
+
+.nominee-card-body {
+    display: flex;
+    flex-direction:column;
+    justify-content:left;
+    text-align: center;
 }
 
 /* Footer Styles */
@@ -183,6 +216,11 @@ button {
     background-color: #8BC24A;
     color: #fff;
     border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+button:hover {
+    background-color: #699633;
 }
 
 /* Labels */

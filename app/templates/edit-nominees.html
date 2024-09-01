@@ -18,7 +18,10 @@
 
 <!-- Displaying Nominees -->
 {% if selected_division %}
-    <h3>Current Nominees</h3>
+
+    {% set selected_division_name = divisions | selectattr('id', 'equalto', selected_division | int) | map(attribute='division') | first %}
+    <h3>Displaying {{ selected_division_name }} Nominees</h3>
+
     <table class="table">
         <thead>
             <tr>
@@ -30,42 +33,47 @@
             </tr>
         </thead>
         <tbody>
-            {% for nominee in nominees %}
+            {% for nominee, year_level in nominees %}
             <tr>
-                <td>{{ nominee.year_level }}</td>
+                <td>{{ year_level }}</td>
                 <td>{{ nominee.first_name }}</td>
                 <td>{{ nominee.last_name }}</td>
                 <td>
                     {% if nominee.photo %}
-                    <img src="data:image/jpeg;base64,{{ nominee.photo }}" alt="{{ nominee.first_name }} {{ nominee.last_name }}" style="width: 50px; height: 50px;">
+                    <img src="data:image/jpeg;base64,{{ nominee.photo }}" alt="{{ nominee.first_name }} {{ nominee.last_name }}" class="edit-photos">
                     {% else %}
-                    <img src="placeholder-image.jpg" alt="No Photo" style="width: 50px; height: 50px;">
+                    <img src="{{ url_for('static', filename='images/placeholder.png') }}" alt="No Photo" class="edit-photos">
                     {% endif %}
                 </td>
                 <td>
-                    <form action="{{ url_for('update_nominee', nominee_id=nominee.id) }}" method="get" style="display:inline;">
-                        <button type="submit" class="btn btn-primary">Edit</button>
+                    <form action="{{ url_for('update_nominee', nominee_id=nominee.id) }}" method="get">
+                        <button>Edit</button>
                     </form>
-                    <form action="{{ url_for('delete_nominee', nominee_id=nominee.id) }}" method="post" style="display:inline;">
-                        <button type="submit" class="btn btn-danger">Delete</button>
+                    <form action="{{ url_for('delete_nominee', nominee_id=nominee.id) }}" method="post">
+                        <button>Delete</button>
                     </form>
                 </td>
             </tr>
             {% endfor %}
-        </tbody>
+        </tbody>        
     </table>
 
     <!-- Add New Nominee Form -->
     <h3>Add New Nominee</h3>
     <form action="{{ url_for('add_nominee') }}" method="post" enctype="multipart/form-data" class="container">
         <label for="first_name" class="form-label">First Name</label>
-        <input type="text" id="first_name" name="first_name" class="form-control" required>
+        <input type="text" id="first_name" name="first_name" class="form-control" maxlength="15" required>
 
         <label for="last_name" class="form-label">Last Name</label>
-        <input type="text" id="last_name" name="last_name" class="form-control" required>
+        <input type="text" id="last_name" name="last_name" class="form-control" maxlength="20" required>
 
         <label for="year_level" class="form-label">Year Level</label>
-        <input type="number" id="year_level" name="year_level" class="form-control" required>
+        <select id="year_level" name="year_level" class="form-control" required>
+            <option value="" selected disabled>Select Year Level</option>
+            {% for level in year_levels %}
+            <option value="{{ level.id }}">{{ level.year_level }}</option>
+            {% endfor %}
+        </select>
 
         <label for="photo" class="form-label">Photo</label>
         <input type="file" id="photo" name="photo" class="form-control" accept="image/*">

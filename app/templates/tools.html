@@ -1,6 +1,11 @@
 {% extends "layout.html" %}
 {% block main %}
 <div class="container mt-5">
+
+    {% if success %}
+        <p class="alert-success">{{ success }}</p>
+    {% endif %}
+
     <h1 class="mb-4">Dashboard</h1>
     <div class="grid-container">
         <div class="grid">
@@ -25,7 +30,7 @@
                     <i class="fas fa-plus fa-3x mb-3"></i>
                     <h5 class="card-title">Create New Form</h5>
                     <p class="card-text">Start a new form to collect votes</p>
-                    <a href="/create-form">Create Form</a>
+                    <a href="#" onclick="confirmCreateNewForm(); return false;">Create Form</a>
                 </div>
             </div>
             <div class="card">
@@ -39,4 +44,12 @@
         </div>
     </div>
 </div>
+
+<script>
+function confirmCreateNewForm() {
+    if (confirm("Are you sure you want to create a new form? This will erase all vote data of the current form.")) {
+        window.location.href = "/create-new-form";
+    }
+}
+</script>
 {% endblock %}

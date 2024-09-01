@@ -42,5 +42,7 @@ class Nominee(db.Model):
     last_name = db.Column(db.String, nullable=False)
     first_name = db.Column(db.String, nullable=False)
     year_level = db.Column(db.Integer, db.ForeignKey('YearLevel.id'), nullable=False)
-    photo = db.Column(db.LargeBinary)
+    photo = db.Column(db.String)
     division = db.Column(db.Integer, db.ForeignKey('Division.id'))
+
+    year_level_rel = db.relationship("YearLevel", backref=db.backref("nominees", lazy=True))
