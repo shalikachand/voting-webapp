@@ -1,8 +1,10 @@
+# BHS Student council Flask web app
+# Created 08/09/2024 by Shalika Chand
 from app import app
 from flask_sqlalchemy import SQLAlchemy
 import os
-import base64
 import re
+import base64
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask import (
@@ -15,45 +17,61 @@ from flask import (
 )
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, "database.db")
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
+    os.path.join(basedir, "database.db")
 db = SQLAlchemy(app)
 
 import app.models as models
 
-# Random generated key to confirm individual user session
+# secret key used to keep the session secure
 SECRET_KEY = "3e4374ba682616c792e39b67a797570acbb448ac1a5950e9"
 app.secret_key = SECRET_KEY
 
 
 def is_logged_in():
+    """Check if the user is logged in by verifying session data"""
     return session.get("is_logged_in", False)
 
 
 @app.context_processor
 def inject_is_logged_in():
+    """Inject session status for all routes"""
     return dict(is_logged_in=is_logged_in)
 
 
 def validate_email(email):
-    # Validate email format xxxxx@burnside.school.nz
+    """Check if the email follows correct format 'xxxxx@burnside.school.nz'"""
     return re.match(r'^\d{5}@burnside\.school\.nz$', email) is not None
 
 
 def check_valid_id(id, model):
-    # Check if the ID exists in the given model
+    """Check if a given ID exists in the provided table"""
     return db.session.query(model.query.filter_by(id=id).exists()).scalar()
+
+
+def handle_login_error(username, password):
+    """Handle login errors by checking username and password"""
+    user = models.Admin.query.filter_by(username=username).first()
+    if user is None:
+        return "Account not found."
+    if not check_password_hash(user.password_hash, password):
+        return "Incorrect Password."
+    return None
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    """If method is POST, validate login credential"""
     if request.method == "POST":
+        # get username and password from the form
         username = request.form.get("username")
         password = request.form.get("password")
+        # handle errors if username or password is incorrect
+        error = handle_login_error(username, password)
+        if error:
+            return render_template("login.html", error=error)
+        # successful login
         user = models.Admin.query.filter_by(username=username).first()
-        if user is None:
-            return render_template("login.html", error="Account not found.")
-        if not check_password_hash(user.password_hash, password):
-            return render_template("login.html", error="Incorrect Password.")
         session["user_id"] = user.id
         session["is_logged_in"] = True
         return redirect(url_for("success"))
@@ -62,14 +80,15 @@ def login():
 
 @app.route("/success")
 def success():
+    """Success page if user is logged in, otherwise redirect to login"""
     if is_logged_in():
         return render_template("tools.html", success="Successfully logged in.")
-    else:
-        return render_template("login.html", error="Session expired.")
+    return render_template("login.html", error="Session expired.")
 
 
 @app.route("/")
 def tools():
+    """Show tools if user is logged in, otherwise redirect to login"""
     if not is_logged_in():
         return redirect(url_for("login"))
     return render_template("tools.html", logged_in=is_logged_in())
@@ -77,6 +96,7 @@ def tools():
 
 @app.route("/logout")
 def logout():
+    """Log user out by clearing session data and redirect to login"""
     session.pop("is_logged_in", None)
     session.pop("user_id", None)
     return redirect(url_for("login"))
@@ -84,59 +104,63 @@ def logout():
 
 @app.route('/vote', methods=['GET', 'POST'])
 def vote():
+    """Validate voters email and check if user has already voted"""
     error = None
-
     if request.method == 'POST':
+        # get email and division from form
         email = request.form.get('email')
         division = request.form.get('division')
 
+        # check email format and check if division is provided
         if not validate_email(email) or not division:
             error = "Invalid email format or missing division."
             return render_template('vote.html', divisions=models.Division.query.all(), error=error)
 
+        # get student number from email
         student_number = email.split('@')[0]
 
-        # Check if the user has already voted
+        # if the user has already voted
         existing_vote = models.InAppResponse.query.filter_by(student_number=student_number, division=division).first()
         if existing_vote:
             error = "You have already voted."
-            return render_template('vote.html', divisions=models.Division.query.all(), error=error)
+            return render_template('vote.html',
+                                   divisions=models.Division.query.all(),
+                                   error=error)
 
-        # Redirect to the select_nominees page and pass email and division as query parameters
         return redirect(url_for('select_nominees', email=email, division=division))
 
-    divisions = models.Division.query.all()
-    return render_template('vote.html', divisions=divisions, error=error)
+    return render_template('vote.html', divisions=models.Division.query.all(), error=error)
 
 
 @app.route("/select-nominees", methods=["GET", "POST"])
 def select_nominees():
+    """Allow voter to select nominees"""
     email = request.args.get("email")
     division_id = request.args.get("division")
 
+    # check their email and division id
     if not validate_email(email) or not division_id:
-        flash("Invalid access. Please enter a valid email and division.")
         return redirect(url_for("vote"))
 
-    # Check if division_id is valid
+    # if division id exists
     if not check_valid_id(division_id, models.Division):
         return render_template("404.html"), 404
 
-    nominees = db.session.query(models.Nominee).filter(
-        models.Nominee.division == division_id
-    ).order_by(models.Nominee.last_name).all()
+    # query nominees for the selected division
+    nominees = db.session.query(models.Nominee).filter(models.Nominee.division == division_id).order_by(models.Nominee.last_name).all()
 
+    # group nominees by year level
     nominees_by_year = {}
     for nominee in nominees:
         year_level = nominee.year_level_rel.year_level
-        if year_level not in nominees_by_year:
-            nominees_by_year[year_level] = []
-        nominees_by_year[year_level].append(nominee)
+        nominees_by_year.setdefault(year_level, []).append(nominee)
 
+    # form submission
     if request.method == "POST":
-        student_number = email.split('@')[0]
-        timestamp = datetime.utcnow()
+        student_number = email.split('@')[0]  # get student number
+        timestamp = datetime.utcnow()  # get current UTC timestamp
 
+        # create new vote response
         response = models.InAppResponse(
             division=division_id,
             student_number=student_number,
@@ -144,8 +168,9 @@ def select_nominees():
             timestamp=timestamp
         )
         db.session.add(response)
-        db.session.flush()
+        db.session.flush()  # temporarily save to db
 
+        # process selected nominees
         selected_nominees = []
         for year_level, nominees in nominees_by_year.items():
             nominee_id = request.form.get(f"nominee_{year_level}")
@@ -155,21 +180,26 @@ def select_nominees():
                     nid=int(nominee_id)
                 ))
 
+        # ensure at least one nominee is selected
         if not selected_nominees:
             db.session.rollback()
-            flash("Please select at least one nominee.")
-            return render_template("select-nominees.html", nominees_by_year=nominees_by_year, email=email, division_id=division_id)
+            return render_template("select-nominees.html",
+                                   nominees_by_year=nominees_by_year,
+                                   email=email, division_id=division_id)
 
         db.session.add_all(selected_nominees)
         db.session.commit()
-
         return redirect(url_for("success"))
 
-    return render_template("select-nominees.html", nominees_by_year=nominees_by_year, email=email, division_id=division_id)
+    return render_template("select-nominees.html",
+                           nominees_by_year=nominees_by_year,
+                           email=email,
+                           division_id=division_id)
 
 
 @app.route("/select-division", methods=["POST"])
 def select_division():
+    """Handles division selection from form and redirects to results"""
     division_id = request.form.get("division")
     if division_id and check_valid_id(division_id, models.Division):
         return redirect(url_for("results", division=division_id))
@@ -178,9 +208,11 @@ def select_division():
 
 @app.route("/results", methods=["GET"])
 def results():
+    """Displays results based on selected division and year level"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
+    # get division id and year level from query params
     division_id = request.args.get("division")
     selected_year_level = request.args.get("year_level")
 
@@ -188,11 +220,14 @@ def results():
     year_levels = []
 
     if division_id:
+        # show 404 if division id is invalid
         if not check_valid_id(division_id, models.Division):
             return render_template("404.html"), 404
 
+        # get all year levels
         year_levels = db.session.query(models.YearLevel).order_by(models.YearLevel.year_level).all()
 
+        # query to get nominees, their year levels, and vote counts
         query = db.session.query(
             models.Nominee.id,
             models.Nominee.first_name,
@@ -215,16 +250,17 @@ def results():
 
     divisions = db.session.query(models.Division).all()
 
-    return render_template("results.html", 
-                           results=results, 
-                           divisions=divisions, 
-                           selected_division=division_id, 
-                           year_levels=year_levels, 
+    return render_template("results.html",
+                           results=results,
+                           divisions=divisions,
+                           selected_division=division_id,
+                           year_levels=year_levels,
                            selected_year_level=selected_year_level)
 
 
 @app.route("/nominee-votes/<int:nominee_id>")
 def nominee_votes(nominee_id):
+    """Displays votes for a specific nominee"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -233,6 +269,7 @@ def nominee_votes(nominee_id):
 
     nominee = db.session.query(models.Nominee).filter_by(id=nominee_id).first()
 
+    # query to get votes for nominee
     votes = db.session.query(
         models.InAppResponse.id,
         models.InAppResponse.email,
@@ -246,6 +283,7 @@ def nominee_votes(nominee_id):
 
 @app.route("/remove-vote/<int:response_id>/<int:nominee_id>", methods=["POST"])
 def remove_vote(response_id, nominee_id):
+    """Removes a vote and updates database"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -254,8 +292,10 @@ def remove_vote(response_id, nominee_id):
 
     db.session.query(models.NomineeBridge).filter_by(sid=response_id, nid=nominee_id).delete()
 
+    # check if there are remaining votes
     remaining_votes = db.session.query(models.NomineeBridge).filter_by(sid=response_id).count()
     if remaining_votes == 0:
+        # remove response if no remaining votes
         db.session.query(models.InAppResponse).filter_by(id=response_id).delete()
 
     db.session.commit()
@@ -265,14 +305,19 @@ def remove_vote(response_id, nominee_id):
 
 @app.route("/edit-nominees", methods=["GET"])
 def edit_nominees():
+    """Displays a form to edit nominees for selected division"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
     division_id = request.args.get("division")
+    nominees = []
+    division = None
+
     if division_id:
         if not check_valid_id(division_id, models.Division):
             return render_template("404.html"), 404
 
+        # query to get nominees and their year levels for division
         nominees = db.session.query(
             models.Nominee,
             models.YearLevel.year_level
@@ -284,13 +329,12 @@ def edit_nominees():
         ).order_by(
             models.YearLevel.year_level
         ).all()
-        division = db.session.query(models.Division).filter_by(id=division_id).first()
-    else:
-        nominees = []
-        division = None
+        division = db.session.query(models.Division)\
+            .filter_by(id=division_id).first()
 
     divisions = db.session.query(models.Division).all()
-    year_levels = db.session.query(models.YearLevel).order_by(models.YearLevel.year_level).all()
+    year_levels = db.session.query(models.YearLevel)\
+        .order_by(models.YearLevel.year_level).all()
 
     return render_template("edit-nominees.html",
                            nominees=nominees,
@@ -301,6 +345,7 @@ def edit_nominees():
 
 @app.route("/edit-nominee/<int:nominee_id>", methods=["GET", "POST"])
 def update_nominee(nominee_id):
+    """Updates nominee details or displays form to edit nominee"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -308,7 +353,8 @@ def update_nominee(nominee_id):
     if not nominee:
         return render_template("404.html"), 404
 
-    year_levels = db.session.query(models.YearLevel).order_by(models.YearLevel.year_level).all()
+    year_levels = db.session.query(models.YearLevel)\
+        .order_by(models.YearLevel.year_level).all()
 
     if request.method == "POST":
         nominee.first_name = request.form.get("first_name")
@@ -321,13 +367,17 @@ def update_nominee(nominee_id):
         db.session.commit()
         return redirect(url_for("edit_nominees", division=nominee.division))
 
-    return render_template("update-nominee.html", nominee=nominee, year_levels=year_levels)
+    return render_template("update-nominee.html",
+                           nominee=nominee,
+                           year_levels=year_levels)
 
 
 @app.route("/delete-nominee/<int:nominee_id>", methods=["POST"])
 def delete_nominee(nominee_id):
+    """Deletes a nominee from database"""
     if not is_logged_in():
         return redirect(url_for("login"))
+
     nominee = models.Nominee.query.get(nominee_id)
     if nominee:
         division_id = nominee.division
@@ -338,8 +388,10 @@ def delete_nominee(nominee_id):
 
 @app.route("/add-nominee", methods=["POST"])
 def add_nominee():
+    """Adds a new nominee to the database"""
     if not is_logged_in():
         return redirect(url_for("login"))
+
     first_name = request.form.get("first_name")
     last_name = request.form.get("last_name")
     year_level = request.form.get("year_level")
@@ -349,6 +401,7 @@ def add_nominee():
         file = request.files['photo']
         if file:
             photo = base64.b64encode(file.read()).decode('utf-8')
+
     new_nominee = models.Nominee(
         first_name=first_name,
         last_name=last_name,
@@ -358,11 +411,12 @@ def add_nominee():
     )
     db.session.add(new_nominee)
     db.session.commit()
-    return redirect(url_for("edit-nominees", division=division))
+    return redirect(url_for("edit_nominees", division=division))
 
 
 @app.route("/create-new-form")
 def create_new_form():
+    """Clears all data and starts a new form"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -376,6 +430,7 @@ def create_new_form():
 
 @app.route("/change-password", methods=["GET", "POST"])
 def change_password():
+    """Allows users to change their password"""
     if not is_logged_in():
         return redirect(url_for("login"))
 
@@ -401,8 +456,6 @@ def change_password():
 
         user.password_hash = generate_password_hash(new_password)
         db.session.commit()
-
-        flash("Password changed successfully.", "success")
         return render_template("change-password.html", success=True)
 
     return render_template("change-password.html")
@@ -410,6 +463,7 @@ def change_password():
 
 @app.errorhandler(404)
 def page_not_found(error):
+    """Handles 404 errors"""
     return render_template("404.html"), 404
 
 

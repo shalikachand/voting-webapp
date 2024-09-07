@@ -17,7 +17,6 @@
 </form>
 
 {% if selected_division %}
-    <!-- Nested Form for Year Level Filter -->
     <form action="{{ url_for('results') }}" method="get" class="container mt-3">
         <input type="hidden" name="division" value="{{ selected_division }}">
         <label for="year_level" class="form-label">Filter by Year Level</label>
