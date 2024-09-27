@@ -512,6 +512,13 @@ def change_password():
     return render_template("change-password.html")
 
 
+@app.errorhandler(500)
+def internal_server_error(error):
+    """Handles internal server error"""
+    error = "500 Internal server error"
+    return render_template("error.html", error=error), 500
+
+
 @app.errorhandler(404)
 def page_not_found(error):
     """Handles 404 errors"""
