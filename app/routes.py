@@ -512,11 +512,19 @@ def change_password():
     return render_template("change-password.html")
 
 
+@app.errorhandler(500)
+def internal_server_error(error):
+    """Handles internal server error"""
+    error = "500 Internal server error"
+    return render_template('error.html', error=error), 500
+
+
 @app.errorhandler(404)
 def page_not_found(error):
     """Handles 404 errors"""
-    return render_template("404.html"), 404
+    error = "404 Page not found"
+    return render_template("error.html", error=error), 404
 
 
 if __name__ == "__main__":
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=False, host='0.0.0.0', port=5000)
