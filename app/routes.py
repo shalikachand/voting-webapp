@@ -17,7 +17,7 @@ from flask import (
 )
 
 basedir = os.path.abspath(os.path.dirname(__file__))
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + \
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' +\
     os.path.join(basedir, "database.db")
 db = SQLAlchemy(app)
 
@@ -26,6 +26,8 @@ import app.models as models
 # secret key used to keep the session secure
 SECRET_KEY = "3e4374ba682616c792e39b67a797570acbb448ac1a5950e9"
 app.secret_key = SECRET_KEY
+
+MIN_LENGTH = 8
 
 
 def is_logged_in():
@@ -42,6 +44,25 @@ def inject_is_logged_in():
 def validate_email(email):
     """Check if the email follows correct format 'xxxxx@burnside.school.nz'"""
     return re.match(r'^\d{5}@burnside\.school\.nz$', email) is not None
+
+
+def is_valid_student_id(student_id):
+    """Check if the student's id is currently as enrolled"""
+    try:
+        # get first two digits as the enrollment year
+        enrollment = student_id[:2]
+
+        enrollment_year = int("20" + enrollment)
+        current_year = datetime.now().year
+
+        # check if enrollment year is within 5-year window
+        if current_year - 5 <= enrollment_year <= current_year:
+            return True
+        else:
+            return False
+    except ValueError:
+        # if there's an issue with converting to an integer
+        return False
 
 
 def check_valid_id(id, model):
@@ -106,6 +127,7 @@ def logout():
 def vote():
     """Validate voters email and check if user has already voted"""
     error = None
+    error = request.args.get("error")
     if request.method == 'POST':
         # get email and division from form
         email = request.form.get('email')
@@ -114,22 +136,30 @@ def vote():
         # check email format and check if division is provided
         if not validate_email(email) or not division:
             error = "Invalid email format or missing division."
-            return render_template('vote.html', divisions=models.Division.query.all(), error=error)
+            return render_template('vote.html',
+                                   divisions=models.Division.query.all(),
+                                   error=error)
 
         # get student number from email
         student_number = email.split('@')[0]
 
         # if the user has already voted
-        existing_vote = models.InAppResponse.query.filter_by(student_number=student_number, division=division).first()
+        existing_vote = models.InAppResponse.query\
+            .filter_by(student_number=student_number,
+                       division=division).first()
         if existing_vote:
             error = "You have already voted."
             return render_template('vote.html',
                                    divisions=models.Division.query.all(),
                                    error=error)
 
-        return redirect(url_for('select_nominees', email=email, division=division))
+        return redirect(url_for('select_nominees',
+                                email=email,
+                                division=division))
 
-    return render_template('vote.html', divisions=models.Division.query.all(), error=error)
+    return render_template('vote.html',
+                           divisions=models.Division.query.all(),
+                           error=error)
 
 
 @app.route("/select-nominees", methods=["GET", "POST"])
@@ -137,6 +167,14 @@ def select_nominees():
     """Allow voter to select nominees"""
     email = request.args.get("email")
     division_id = request.args.get("division")
+
+    # extract student number from the email
+    student_number = email.split('@')[0]
+
+    # check if student id is valid
+    if not is_valid_student_id(student_number):
+        error = "Invalid student ID. You are not currently enrolled."
+        return redirect(url_for("vote", error=error))
 
     # check their email and division id
     if not validate_email(email) or not division_id:
@@ -147,7 +185,9 @@ def select_nominees():
         return render_template("404.html"), 404
 
     # query nominees for the selected division
-    nominees = db.session.query(models.Nominee).filter(models.Nominee.division == division_id).order_by(models.Nominee.last_name).all()
+    nominees = db.session.query(models.Nominee)\
+        .filter(models.Nominee.division == division_id)\
+        .order_by(models.Nominee.last_name).all()
 
     # group nominees by year level
     nominees_by_year = {}
@@ -158,8 +198,8 @@ def select_nominees():
     # form submission
     if request.method == "POST":
         student_number = email.split('@')[0]  # get student number
-        timestamp = datetime.utcnow()  # get current UTC timestamp
-
+        # get current UTC timestamp
+        timestamp = datetime.now().astimezone()
         # create new vote response
         response = models.InAppResponse(
             division=division_id,
@@ -225,7 +265,8 @@ def results():
             return render_template("404.html"), 404
 
         # get all year levels
-        year_levels = db.session.query(models.YearLevel).order_by(models.YearLevel.year_level).all()
+        year_levels = db.session.query(models.YearLevel)\
+            .order_by(models.YearLevel.year_level).all()
 
         # query to get nominees, their year levels, and vote counts
         query = db.session.query(
@@ -234,19 +275,25 @@ def results():
             models.Nominee.last_name,
             models.YearLevel.year_level,
             db.func.count(models.NomineeBridge.sid).label('votes')
-        ).join(models.NomineeBridge, models.Nominee.id == models.NomineeBridge.nid)\
-         .join(models.InAppResponse, models.NomineeBridge.sid == models.InAppResponse.id)\
-         .join(models.YearLevel, models.Nominee.year_level == models.YearLevel.id)\
+        ).join(models.NomineeBridge,
+               models.Nominee.id == models.NomineeBridge.nid)\
+         .join(models.InAppResponse,
+               models.NomineeBridge.sid == models.InAppResponse.id)\
+         .join(models.YearLevel,
+               models.Nominee.year_level == models.YearLevel.id)\
          .filter(models.Nominee.division == division_id)
 
         if selected_year_level:
             if not check_valid_id(selected_year_level, models.YearLevel):
                 return render_template("404.html"), 404
-            query = query.filter(models.Nominee.year_level == selected_year_level)
+            query = query\
+                .filter(models.Nominee.year_level == selected_year_level)
 
-        results = query.group_by(models.Nominee.id)\
-                       .order_by(db.func.count(models.NomineeBridge.sid).desc())\
-                       .all()
+        results = (
+            query.group_by(models.Nominee.id)
+            .order_by(db.func.count(models.NomineeBridge.sid).desc())
+            .all()
+        )
 
     divisions = db.session.query(models.Division).all()
 
@@ -274,7 +321,8 @@ def nominee_votes(nominee_id):
         models.InAppResponse.id,
         models.InAppResponse.email,
         models.InAppResponse.timestamp
-    ).join(models.NomineeBridge, models.NomineeBridge.sid == models.InAppResponse.id)\
+    ).join(models.NomineeBridge,
+           models.NomineeBridge.sid == models.InAppResponse.id)\
      .filter(models.NomineeBridge.nid == nominee_id)\
      .all()
 
@@ -287,16 +335,22 @@ def remove_vote(response_id, nominee_id):
     if not is_logged_in():
         return redirect(url_for("login"))
 
-    if not check_valid_id(response_id, models.InAppResponse) or not check_valid_id(nominee_id, models.Nominee):
+    if (
+        not check_valid_id(response_id, models.InAppResponse) or
+        not check_valid_id(nominee_id, models.Nominee)
+    ):
         return render_template("404.html"), 404
 
-    db.session.query(models.NomineeBridge).filter_by(sid=response_id, nid=nominee_id).delete()
+    db.session.query(models.NomineeBridge)\
+        .filter_by(sid=response_id, nid=nominee_id).delete()
 
     # check if there are remaining votes
-    remaining_votes = db.session.query(models.NomineeBridge).filter_by(sid=response_id).count()
+    remaining_votes = db.session.query(models.NomineeBridge)\
+        .filter_by(sid=response_id).count()
     if remaining_votes == 0:
         # remove response if no remaining votes
-        db.session.query(models.InAppResponse).filter_by(id=response_id).delete()
+        db.session.query(models.InAppResponse)\
+            .filter_by(id=response_id).delete()
 
     db.session.commit()
 
@@ -311,7 +365,6 @@ def edit_nominees():
 
     division_id = request.args.get("division")
     nominees = []
-    division = None
 
     if division_id:
         if not check_valid_id(division_id, models.Division):
@@ -329,8 +382,6 @@ def edit_nominees():
         ).order_by(
             models.YearLevel.year_level
         ).all()
-        division = db.session.query(models.Division)\
-            .filter_by(id=division_id).first()
 
     divisions = db.session.query(models.Division).all()
     year_levels = db.session.query(models.YearLevel)\
@@ -446,7 +497,7 @@ def change_password():
             flash("Incorrect current password.", "error")
             return render_template("change-password.html")
 
-        if len(new_password) < 8:
+        if len(new_password) < MIN_LENGTH:
             flash("New password must be at least 8 characters long.", "error")
             return render_template("change-password.html")
 

@@ -5,10 +5,10 @@
 
 <form action="{{ url_for('update_nominee', nominee_id=nominee.id) }}" method="post" enctype="multipart/form-data">
     <label for="first_name" class="form-label">First Name</label>
-    <input type="text" id="first_name" name="first_name" class="form-control" value="{{ nominee.first_name }}" required>
+    <input type="text" id="first_name" name="first_name" class="form-control" value="{{ nominee.first_name }}" maxlength="15" required>
 
     <label for="last_name" class="form-label">Last Name</label>
-    <input type="text" id="last_name" name="last_name" class="form-control" value="{{ nominee.last_name }}" required>
+    <input type="text" id="last_name" name="last_name" class="form-control" value="{{ nominee.last_name }}" maxlength="20" required>
 
     <label for="year_level" class="form-label">Year Level</label>
     <select id="year_level" name="year_level" class="form-control" required>
